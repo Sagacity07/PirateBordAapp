@@ -9,3 +9,5 @@ export function addUniqueCondition(conditions:string[],condition:string):string[
   if(!clean||conditions.some(existing=>existing.toLocaleLowerCase()===clean.toLocaleLowerCase()))return conditions;
   return [...conditions,clean];
 }
+
+export const removeById=<T extends {id:string}>(records:T[],id:string)=>records.filter(record=>record.id!==id);
