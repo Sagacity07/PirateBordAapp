@@ -11,3 +11,11 @@ export function addUniqueCondition(conditions:string[],condition:string):string[
 }
 
 export const removeById=<T extends {id:string}>(records:T[],id:string)=>records.filter(record=>record.id!==id);
+
+export function campaignHighlights<T extends {type:string;status:string}>(records:T[]):T[]{
+  const latestSession=records.find(record=>record.type==='session');
+  const activeQuest=records.find(record=>record.type==='quest'&&record.status.toLocaleLowerCase().includes('active'));
+  const ship=records.find(record=>record.type==='ship');
+  const treasure=records.find(record=>record.type==='treasure');
+  return [latestSession,activeQuest,ship,treasure].filter((record):record is T=>Boolean(record));
+}

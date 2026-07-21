@@ -25,3 +25,9 @@ export function rollFormula(formula: string, random: () => number = Math.random)
     detail: `${values.join(' + ')}${modifier ? ` ${modifier > 0 ? '+' : '-'} ${Math.abs(modifier)}` : ''}`,
   };
 }
+
+export function parsePhysicalRoll(value:string):number|null{
+  if(!/^-?\d+$/.test(value.trim()))return null;
+  const total=Number(value);
+  return Number.isSafeInteger(total)?total:null;
+}

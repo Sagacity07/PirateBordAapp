@@ -1,4 +1,5 @@
 import type {Ability,AppData,CampaignRecord,Character,Item,JournalEntry,RuleCard} from './types';
+import {normalizeData} from './data';
 
 export interface ImportDiagnostic {
   stage:'parse'|'detect'|'validate'|'migrate';
@@ -112,7 +113,8 @@ function validateFullBackup(value:Record<string,unknown>):AppData {
   campaign.forEach((entry,index)=>{const item=claimId(entry,`$.campaign[${index}]`);if(!campaignTypes.has(item.type as CampaignRecord['type']))fail({stage:'validate',code:'INVALID_RECORD_TYPE',message:'Unknown campaign record type.',path:`$.campaign[${index}].type`,expected:[...campaignTypes].join(' | '),received:JSON.stringify(item.type)})});
   journal.forEach((entry,index)=>{const item=claimId(entry,`$.journal[${index}]`);if(!journalKinds.has(item.kind as JournalEntry['kind']))fail({stage:'validate',code:'INVALID_RECORD_TYPE',message:'Unknown journal kind.',path:`$.journal[${index}].kind`,expected:[...journalKinds].join(' | '),received:JSON.stringify(item.kind)})});
   rules.forEach((entry,index)=>claimId(entry,`$.rules[${index}]`));rolls.forEach((entry,index)=>claimId(entry,`$.rolls[${index}]`));
-  return value as unknown as AppData;
+  if(value.settings!==undefined&&!isObject(value.settings))fail({stage:'validate',code:'INVALID_SETTINGS',message:'Backup settings must be an object.',path:'$.settings',expected:'object',received:describe(value.settings)});
+  return normalizeData(value as unknown as AppData);
 }
 
 export function parseCompanionImport(raw:string,current:AppData):AppData {

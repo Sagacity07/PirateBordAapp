@@ -4,4 +4,5 @@ export interface Character{id:string;name:string;nickname:string;className:strin
 export interface CampaignRecord{id:string;type:'session'|'npc'|'location'|'quest'|'ship'|'rumor'|'treasure';title:string;status:string;notes:string;createdAt:string}
 export interface JournalEntry{id:string;kind:'quick'|'session'|'character';title:string;body:string;pinned:boolean;createdAt:string}
 export interface RuleCard{id:string;title:string;category:string;summary:string;book:string;page:string;favorite:boolean;notes:string}
-export interface AppData{character:Character;campaign:CampaignRecord[];journal:JournalEntry[];rules:RuleCard[];rolls:{id:string;label:string;formula:string;total:number;detail:string;at:string}[]}
+export interface AppSettings{showHelp:boolean;conditionRules:Record<string,string>}
+export interface AppData{character:Character;campaign:CampaignRecord[];journal:JournalEntry[];rules:RuleCard[];rolls:{id:string;label:string;formula:string;total:number;detail:string;at:string}[];settings:AppSettings}
