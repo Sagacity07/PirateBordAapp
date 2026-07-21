@@ -90,7 +90,7 @@ function migrateCharacterEnvelope(envelope:Record<string,unknown>,current:AppDat
     abilities:{strength:finiteNumber(abilities.strength,'$.character.abilities.strength',0,{min:-10,max:10,integer:true}),agility:finiteNumber(abilities.agility,'$.character.abilities.agility',0,{min:-10,max:10,integer:true}),presence:finiteNumber(abilities.presence,'$.character.abilities.presence',0,{min:-10,max:10,integer:true}),toughness:finiteNumber(abilities.toughness,'$.character.abilities.toughness',0,{min:-10,max:10,integer:true}),spirit:finiteNumber(abilities.spirit,'$.character.abilities.spirit',0,{min:-10,max:10,integer:true})},
     armor:text(armor.name,'None'),weapon:primary?`${text(primary.name,'Weapon')} (${text(primary.damage,'d4')})`:'Fists (d2)',background:backgroundLines.join('\n'),features:featureLines.join('\n'),conditions:[],items
   };
-  return {...current,character};
+  return normalizeData({...current,character});
 }
 
 const abilities:Ability[]=['strength','agility','presence','toughness','spirit'];

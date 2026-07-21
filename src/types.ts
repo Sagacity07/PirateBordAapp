@@ -1,6 +1,7 @@
 export type Ability='strength'|'agility'|'presence'|'toughness'|'spirit';
-export interface Item{id:string;name:string;category:string;quantity:number;uses?:number;die?:string;equipped:boolean;notes:string}
-export interface Character{id:string;name:string;nickname:string;playerName?:string;portrait?:string;className:string;level:number;xp:number;hp:number;maxHp:number;devilsLuck:number;silver:number;abilities:Record<Ability,number>;armor:string;weapon:string;background:string;features:string;conditions:string[];items:Item[]}
+export type WeaponType='melee'|'ranged';
+export interface Item{id:string;name:string;category:string;quantity:number;uses?:number;die?:string;equipped:boolean;notes:string;weaponType?:WeaponType;range?:string;ammo?:number;reloadActions?:number;reloadProgress?:number;needsReload?:boolean;blackPowder?:boolean}
+export interface Character{id:string;name:string;nickname:string;playerName?:string;portrait?:string;activeWeaponId?:string;className:string;level:number;xp:number;hp:number;maxHp:number;devilsLuck:number;silver:number;abilities:Record<Ability,number>;armor:string;weapon:string;background:string;features:string;conditions:string[];items:Item[]}
 export interface CampaignRecord{id:string;type:'session'|'npc'|'location'|'quest'|'ship'|'rumor'|'treasure';title:string;status:string;notes:string;createdAt:string}
 export interface JournalEntry{id:string;kind:'quick'|'session'|'character';title:string;body:string;pinned:boolean;createdAt:string}
 export interface RuleCard{id:string;title:string;category:string;summary:string;book:string;page:string;favorite:boolean;notes:string}

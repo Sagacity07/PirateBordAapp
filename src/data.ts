@@ -1,4 +1,5 @@
 import type {AppData,AppSettings,Character,RuleCard} from './types';
+import {inferWeaponType} from './domain';
 export const uid=()=>crypto.randomUUID();
 export const blankCharacter=():Character=>({id:uid(),name:'Unnamed Scoundrel',nickname:'',className:'Unclassed',level:1,xp:0,hp:6,maxHp:6,devilsLuck:2,silver:0,abilities:{strength:0,agility:0,presence:0,toughness:0,spirit:0},armor:'None',weapon:'Fists (d2)',background:'',features:'',conditions:[],items:[]});
 const rules:RuleCard[]=[
@@ -22,7 +23,7 @@ export const defaultConditionRules=()=>({
 });
 export const defaultSettings=():AppSettings=>({showHelp:true,conditionRulesVersion:CONDITION_RULES_VERSION,conditionRules:defaultConditionRules()});
 export const seedData=():AppData=>({character:blankCharacter(),campaign:[],journal:[],rules,rolls:[],settings:defaultSettings()});
-export const normalizeData=(data:AppData):AppData=>{const saved=data.settings;const upgrading=(saved?.conditionRulesVersion??0)<CONDITION_RULES_VERSION;const bookRules=defaultConditionRules();const customRules=Object.fromEntries(Object.entries(saved?.conditionRules??{}).filter(([name])=>!(name in bookRules)));return {...data,settings:{...defaultSettings(),...(saved??{}),conditionRulesVersion:CONDITION_RULES_VERSION,conditionRules:upgrading?{...bookRules,...customRules}:{...bookRules,...(saved?.conditionRules??{})}}}};
+export const normalizeData=(data:AppData):AppData=>{const saved=data.settings;const upgrading=(saved?.conditionRulesVersion??0)<CONDITION_RULES_VERSION;const bookRules=defaultConditionRules();const customRules=Object.fromEntries(Object.entries(saved?.conditionRules??{}).filter(([name])=>!(name in bookRules)));const items=(data.character.items??[]).map(item=>item.category.toLowerCase()==='weapon'?{...item,weaponType:item.weaponType??inferWeaponType(item.name),reloadActions:item.reloadActions??0,reloadProgress:item.reloadProgress??0,needsReload:item.needsReload??false}:item);const activeWeaponId=data.character.activeWeaponId??items.find(item=>item.category.toLowerCase()==='weapon'&&item.equipped)?.id;return {...data,character:{...data.character,items,activeWeaponId},settings:{...defaultSettings(),...(saved??{}),conditionRulesVersion:CONDITION_RULES_VERSION,conditionRules:upgrading?{...bookRules,...customRules}:{...bookRules,...(saved?.conditionRules??{})}}}};
 export const names=['Anne Vane','Barnacle Bart','Calico Flint','Dread Mary','Elias Graves','Nell Blackwake','Pip Two-Toes','Silas Salt'];
 export const classes=['Unclassed','Buccaneer','Rapscallion','Swashbuckler','Zealot','Sorcerer','Custom'];
 export const weapons=['Fists (d2)','Knife (d4)','Pistol (d6)','Cutlass (d6)','Musket (d8)','Heavy weapon (d10)'];

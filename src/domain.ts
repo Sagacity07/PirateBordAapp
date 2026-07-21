@@ -33,3 +33,14 @@ export function rollAdvancement(abilities:Record<string,number>,rollDie=()=>Math
   const find=findRoll<=2?'Nothing':findRoll===3?'A weapon (roll d12 on the weapon table)':findRoll===4?`${silverGain} silver (3d10)`:findRoll===5?'One Ancient Relic':'One Arcane Ritual';
   return {abilityRolls,abilities:next,hpGain,findRoll,silverGain,find};
 }
+
+export const inferWeaponType=(name:string):'melee'|'ranged'=>/(pistol|musket|rifle|blunderbuss|bow|crossbow|throwing|harpoon|sling)/i.test(name)?'ranged':'melee';
+export const weaponAbility=(type:'melee'|'ranged')=>type==='ranged'?'presence':'strength';
+export function fireWeapon<T extends {weaponType?:string;ammo?:number;reloadActions?:number;needsReload?:boolean;reloadProgress?:number}>(weapon:T):T{
+  if(weapon.weaponType!=='ranged'||weapon.needsReload||(weapon.ammo??0)<=0)return weapon;
+  return {...weapon,ammo:Math.max(0,(weapon.ammo??0)-1),needsReload:(weapon.reloadActions??0)>0,reloadProgress:0};
+}
+export function reloadWeapon<T extends {reloadActions?:number;reloadProgress?:number;needsReload?:boolean}>(weapon:T):T{
+  if(!weapon.needsReload)return weapon;const actions=Math.max(1,weapon.reloadActions??1),progress=(weapon.reloadProgress??0)+1;
+  return progress>=actions?{...weapon,needsReload:false,reloadProgress:0}:{...weapon,reloadProgress:progress};
+}
