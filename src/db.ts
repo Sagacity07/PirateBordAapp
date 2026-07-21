@@ -1,4 +1,4 @@
-import {openDB} from 'idb';import type {AppData} from './types';import {seedData} from './data';
+import {openDB} from 'idb';import type {AppData} from './types';import {seedData} from './data';import {mergeSession1} from './session1';
 const dbp=openDB('pirate-borg-companion',1,{upgrade(db){db.createObjectStore('state')}});
-export async function loadData(){return (await (await dbp).get('state','app')) as AppData|undefined ?? seedData()}
+export async function loadData(){return mergeSession1((await (await dbp).get('state','app')) as AppData|undefined ?? seedData())}
 export async function saveData(data:AppData){await (await dbp).put('state',data,'app')}
