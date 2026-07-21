@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {addUniqueCondition,campaignHighlights,clampHp,damageHp,healHp,nonNegativeInteger,removeById,spendResource} from './domain';
+import {addUniqueCondition,campaignHighlights,clampHp,damageHp,healHp,nonNegativeInteger,removeById,rollAdvancement,spendResource} from './domain';
 
 describe('character domain rules',()=>{
   it.each([[3,3],[-1,0],[2.9,2],[Number.NaN,0],[Number.POSITIVE_INFINITY,0]])('normalizes %s to %s',(input,expected)=>expect(nonNegativeInteger(input)).toBe(expected));
@@ -12,4 +12,8 @@ describe('character domain rules',()=>{
   it('rejects empty and case-insensitive duplicate conditions',()=>{const conditions=['Poisoned'];expect(addUniqueCondition(conditions,'')).toBe(conditions);expect(addUniqueCondition(conditions,'poisoned')).toBe(conditions)});
   it('removes only the record with the requested ID',()=>{const records=[{id:'a',name:'A'},{id:'b',name:'B'}];expect(removeById(records,'a')).toEqual([{id:'b',name:'B'}]);expect(removeById(records,'missing')).toEqual(records)});
   it('selects useful Captain’s Log highlights',()=>{const records=[{type:'npc',status:'Alive'},{type:'session',status:'Complete'},{type:'quest',status:'Active'},{type:'ship',status:'Owned'},{type:'treasure',status:'Held'}];expect(campaignHighlights(records).map(record=>record.type)).toEqual(['session','quest','ship','treasure'])});
+  it('applies Player Guide advancement rolls',()=>{const rolls=[1,2,3,4,5,6,4];const result=rollAdvancement({strength:-1,agility:0,presence:1,toughness:2,spirit:5},()=>rolls.shift()!,()=>10);expect(result.abilities).toEqual({strength:-2,agility:1,presence:2,toughness:3,spirit:6});expect(result.hpGain).toBe(6);expect(result.findRoll).toBe(4);expect(result.silverGain).toBe(30)});
+  it('increases abilities from -3 through +1 unless the die is one',()=>{const rolls=[2,2,2,2,2,1,1];expect(rollAdvancement({strength:-3,agility:-2,presence:-1,toughness:0,spirit:1},()=>rolls.shift()!,()=>1).abilities).toEqual({strength:-2,agility:-1,presence:0,toughness:1,spirit:2})});
+  it('never advances an ability above +6 or below -3',()=>{const rolls=[6,1,6,1,6,1,1];expect(rollAdvancement({strength:6,agility:-3,presence:6,toughness:-3,spirit:6},()=>rolls.shift()!,()=>1).abilities).toEqual({strength:6,agility:-3,presence:6,toughness:-3,spirit:6})});
+  it('maps every among-the-dead reward result',()=>{for(const [roll,label] of [[1,'Nothing'],[2,'Nothing'],[3,'weapon'],[5,'Relic'],[6,'Ritual']] as const){const dice=[2,2,2,2,2,2,roll];expect(rollAdvancement({a:0,b:0,c:0,d:0,e:0},()=>dice.shift()!,()=>1).find).toContain(label)}});
 });

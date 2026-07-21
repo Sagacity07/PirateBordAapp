@@ -19,3 +19,17 @@ export function campaignHighlights<T extends {type:string;status:string}>(record
   const treasure=records.find(record=>record.type==='treasure');
   return [latestSession,activeQuest,ship,treasure].filter((record):record is T=>Boolean(record));
 }
+
+export interface AdvancementResult{abilityRolls:Record<string,number>;abilities:Record<string,number>;hpGain:number;findRoll:number;silverGain:number;find:string}
+export function rollAdvancement(abilities:Record<string,number>,rollDie=()=>Math.floor(Math.random()*6)+1,rollD10=()=>Math.floor(Math.random()*10)+1):AdvancementResult{
+  const abilityRolls:Record<string,number>={},next:Record<string,number>={};
+  for(const [name,current] of Object.entries(abilities)){
+    const roll=rollDie();abilityRolls[name]=roll;
+    const increases=current<=1?roll!==1:roll>=current;
+    next[name]=Math.max(-3,Math.min(6,current+(increases?1:-1)));
+  }
+  const hpGain=rollDie(),findRoll=rollDie();
+  const silverGain=findRoll===4?rollD10()+rollD10()+rollD10():0;
+  const find=findRoll<=2?'Nothing':findRoll===3?'A weapon (roll d12 on the weapon table)':findRoll===4?`${silverGain} silver (3d10)`:findRoll===5?'One Ancient Relic':'One Arcane Ritual';
+  return {abilityRolls,abilities:next,hpGain,findRoll,silverGain,find};
+}
