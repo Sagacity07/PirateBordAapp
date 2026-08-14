@@ -1,12 +1,14 @@
 import {describe,expect,it} from 'vitest';
 import {seedData} from './data';
 import {CompanionImportError,parseCompanionImport} from './import';
+import {characterBackupEnvelope,fullBackupEnvelope} from './backup';
 
 const pip={schemaVersion:'1.0',importType:'character',character:{id:'character-pip-two-toes',name:'Pip “Two-Toes”',class:{name:'Rapscallion',specialties:[{name:'Sneaky Bastard',rulesSummary:'Critical hit from shadows.'}]},abilities:{strength:-1,agility:2,presence:0,toughness:-1,spirit:-1},hitPoints:{current:7,maximum:7},devilsLuck:{current:1,recoveryDie:'d2'},silver:4,armor:{name:'None'},clothing:{name:'Old uniform'},hat:{name:'No hat'},weapons:[{id:'weapon-broadsword',name:'Broadsword',damage:'d8',quantity:1,equipped:true},{id:'weapon-throwing-axe',name:'Throwing Axe',damage:'d6',quantity:1,equipped:false}],inventory:[{id:'item-medical-kit',name:'Medical Kit',category:'gear',quantity:1,usesRemaining:1,equipped:false,notes:''}],relics:[{id:'relic-mermaid-scales',name:'Mermaid Scales',quantity:1,timesUsed:1,usesRemaining:null,rulesSummary:'Breathe underwater.'}],background:{name:'Former Servant'},idiosyncrasy:{name:'Voluntary Insomnia',quote:'Sleep is for the weak.'},backstory:['Shark story.']}};
 
 const diagnostic=(input:unknown)=>{try{parseCompanionImport(typeof input==='string'?input:JSON.stringify(input),seedData())}catch(error){return (error as CompanionImportError).diagnostic}throw new Error('Expected import to fail')};
 
 describe('character imports',()=>{
+  it('imports a native character export without replacing campaign data',()=>{const current=seedData();current.campaign.push({id:'campaign-1',type:'quest',title:'Keep this quest',status:'Active',notes:'',createdAt:'2026-08-14'});const character={...current.character,id:'character-imported',name:'Pip Two-Toes',hp:7,maxHp:7};const imported=parseCompanionImport(JSON.stringify(characterBackupEnvelope(character)),current);expect(imported.character.name).toBe('Pip Two-Toes');expect(imported.campaign).toHaveLength(1)});
   it('migrates all important Pip fields',()=>{const result=parseCompanionImport(JSON.stringify(pip),seedData());expect(result.character).toMatchObject({id:'character-pip-two-toes',name:'Pip “Two-Toes”',hp:7,maxHp:7,silver:4,className:'Rapscallion',weapon:'Broadsword (d8)',abilities:{strength:-1,agility:2,presence:0,toughness:-1,spirit:-1}});expect(result.character.items).toHaveLength(4);expect(result.character.items.find(x=>x.name==='Medical Kit')?.uses).toBe(1);expect(result.character.items.find(x=>x.name==='Mermaid Scales')?.notes).toContain('remaining uses: unknown');expect(result.character.background).toContain('“Sleep is for the weak.”')});
   it('preserves unrelated campaign data',()=>{const current=seedData();current.campaign.push({id:'quest-1',type:'quest',title:'Quest',status:'Open',notes:'',createdAt:'2026-01-01'});expect(parseCompanionImport(JSON.stringify(pip),current).campaign).toEqual(current.campaign)});
   it('generates IDs when optional IDs are absent',()=>{const copy=structuredClone(pip);delete (copy.character as {id?:string}).id;expect(parseCompanionImport(JSON.stringify(copy),seedData()).character.id).toMatch(/^character-/)});
@@ -22,6 +24,7 @@ describe('character imports',()=>{
 });
 
 describe('backup imports',()=>{
+  it('accepts the versioned full-backup envelope',()=>{const data=seedData();expect(parseCompanionImport(JSON.stringify(fullBackupEnvelope(data)),seedData())).toEqual(data)});
   it('round-trips a complete backup',()=>{const data=seedData();expect(parseCompanionImport(JSON.stringify(data),seedData())).toEqual(data)});
   it('accepts campaignContext wrappers',()=>{const data=seedData();expect(parseCompanionImport(JSON.stringify({campaignContext:data}),seedData())).toEqual(data)});
   it('accepts after wrappers',()=>{const data=seedData();expect(parseCompanionImport(JSON.stringify({after:data}),seedData())).toEqual(data)});

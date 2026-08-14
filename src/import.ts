@@ -57,6 +57,7 @@ function migrateCharacterEnvelope(envelope:Record<string,unknown>,current:AppDat
   if(envelope.schemaVersion!=='1.0') fail({stage:'detect',code:'UNSUPPORTED_SCHEMA_VERSION',message:`Schema version ${String(envelope.schemaVersion)} is not supported.`,path:'$.schemaVersion',expected:'"1.0"',received:JSON.stringify(envelope.schemaVersion),suggestedFix:'Export the file using schema version 1.0.'});
   if(!isObject(envelope.character)) fail({stage:'validate',code:'MISSING_CHARACTER',message:'The character import has no character object.',path:'$.character',expected:'object',received:describe(envelope.character),suggestedFix:'Add a character object to the import file.'});
   const source=envelope.character as Record<string,unknown>;
+  if('hp' in source||'maxHp' in source)return validateFullBackup({...current,character:source});
   const name=requiredString(source.name,'$.character.name');
   const hp=record(source.hitPoints),luck=record(source.devilsLuck),klass=record(source.class),armor=record(source.armor);
   const abilities=record(source.abilities),clothing=record(source.clothing),hat=record(source.hat);
@@ -123,7 +124,8 @@ export function parseCompanionImport(raw:string,current:AppData):AppData {
   if(!isObject(parsed)) fail({stage:'detect',code:'INVALID_ROOT',message:'The import file must contain a JSON object.',path:'$',expected:'object',received:describe(parsed)});
   const root=parsed as Record<string,unknown>;
   if(root.importType==='character') return migrateCharacterEnvelope(root,current);
-  const candidate=isObject(root.campaignContext)?root.campaignContext:isObject(root.after)?root.after:root;
+  if(root.importType==='full-backup'&&root.schemaVersion!=='1.0')fail({stage:'detect',code:'UNSUPPORTED_SCHEMA_VERSION',message:`Schema version ${String(root.schemaVersion)} is not supported.`,path:'$.schemaVersion',expected:'"1.0"',received:JSON.stringify(root.schemaVersion)});
+  const candidate=root.importType==='full-backup'&&isObject(root.data)?root.data:isObject(root.campaignContext)?root.campaignContext:isObject(root.after)?root.after:root;
   const looksLikeBackup='character' in candidate||'campaign' in candidate||'journal' in candidate||'rules' in candidate||'rolls' in candidate;
   if(looksLikeBackup)return validateFullBackup(candidate);
   return fail({stage:'detect',code:'UNSUPPORTED_IMPORT_TYPE',message:'This file is neither a character import nor a full companion backup.',path:'$.importType',expected:'"character" or a full AppData backup',received:JSON.stringify(root.importType),suggestedFix:'Choose a Pirate Borg Companion character export or full backup.'});
