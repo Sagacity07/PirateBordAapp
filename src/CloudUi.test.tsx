@@ -3,7 +3,7 @@ import {describe,expect,it,vi} from 'vitest';
 
 vi.mock('./supabase',()=>({supabase:{auth:{signOut:vi.fn()}}}));
 
-import {CloudBadge,CloudPanel} from './CloudUi';
+import {cloudErrorMessage,CloudBadge,CloudPanel} from './CloudUi';
 
 const user={id:'player-1',email:'pirate@example.com'} as any;
 const noop=async()=>{};
@@ -22,5 +22,9 @@ describe('first-time cloud setup',()=>{
     const html=renderToStaticMarkup(<CloudBadge campaign={null} status="error" onClick={()=>{}}/>);
     expect(html).toContain('Cloud sync needs attention');
     expect(html).not.toContain('Offline changes waiting');
+  });
+
+  it('shows useful Supabase error objects instead of a generic failure',()=>{
+    expect(cloudErrorMessage({message:'Campaign creation was denied'})).toBe('Campaign creation was denied');
   });
 });
