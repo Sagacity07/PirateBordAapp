@@ -4,13 +4,16 @@ import type {CampaignRecord,JournalEntry} from './types';
 const mocks=vi.hoisted(()=>{
   const chain:any={error:null};
   chain.upsert=vi.fn(()=>Promise.resolve({error:null}));
+  chain.insert=vi.fn(()=>Promise.resolve({error:null}));
+  chain.update=vi.fn(()=>chain);
+  chain.select=vi.fn(()=>Promise.resolve({data:[{id:'record-1'}],error:null}));
   chain.delete=vi.fn(()=>chain);
   chain.eq=vi.fn(()=>chain);
   return{chain,from:vi.fn(()=>chain)};
 });
 vi.mock('./supabase',()=>({supabase:{from:mocks.from}}));
 
-import {flushCloudQueue,journalMutation,queueMutation,recordMutation,removeRecordMutation} from './cloud';
+import {applyCampaignRecordConditional,flushCloudQueue,journalMutation,queueMutation,recordMutation,removeRecordMutation} from './cloud';
 
 const record:CampaignRecord={id:'record-1',type:'quest',title:'Find the reef',status:'Open',notes:'Follow the map',createdAt:'2026-08-15T00:00:00Z'};
 const journal:JournalEntry={id:'journal-1',kind:'character',title:'Secret',body:'Never trust the parrot.',pinned:false,createdAt:'2026-08-15T00:00:00Z',visibility:'private'};
@@ -18,7 +21,7 @@ const journal:JournalEntry={id:'journal-1',kind:'character',title:'Secret',body:
 describe('cloud mutation queue',()=>{
   const values=new Map<string,string>();
   beforeEach(()=>{
-    values.clear();mocks.from.mockClear();mocks.chain.upsert.mockReset();mocks.chain.upsert.mockResolvedValue({error:null});mocks.chain.delete.mockClear();mocks.chain.eq.mockClear();
+    values.clear();mocks.from.mockClear();mocks.chain.upsert.mockReset();mocks.chain.upsert.mockResolvedValue({error:null});mocks.chain.insert.mockClear();mocks.chain.update.mockClear();mocks.chain.select.mockReset();mocks.chain.select.mockResolvedValue({data:[{id:'record-1'}],error:null});mocks.chain.delete.mockClear();mocks.chain.eq.mockClear();
     vi.stubGlobal('localStorage',{getItem:(key:string)=>values.get(key)??null,setItem:(key:string,value:string)=>values.set(key,value),removeItem:(key:string)=>values.delete(key)});
   });
 
@@ -47,5 +50,17 @@ describe('cloud mutation queue',()=>{
     expect(mocks.chain.delete).toHaveBeenCalledOnce();
     expect(mocks.chain.eq).toHaveBeenNthCalledWith(1,'campaign_id','campaign-1');
     expect(mocks.chain.eq).toHaveBeenNthCalledWith(2,'id','record-1');
+  });
+
+  it('uses compare-and-set semantics for transcript updates',async()=>{
+    const next={...record,status:'Complete'};
+    await expect(applyCampaignRecordConditional('campaign-1','user-1',next,record)).resolves.toEqual({applied:true,conflict:false});
+    expect(mocks.chain.update).toHaveBeenCalledWith({data:next,updated_by:'user-1'});
+    expect(mocks.chain.eq).toHaveBeenCalledWith('data',record);
+  });
+
+  it('reports a conflict when the source row changed before the write',async()=>{
+    mocks.chain.select.mockResolvedValueOnce({data:[],error:null});
+    await expect(applyCampaignRecordConditional('campaign-1','user-1',{...record,status:'Complete'},record)).resolves.toEqual({applied:false,conflict:true});
   });
 });

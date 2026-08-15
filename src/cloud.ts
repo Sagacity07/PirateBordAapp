@@ -71,6 +71,13 @@ export async function createCampaign(userId:string,name:string,data:AppData):Pro
 export async function joinCampaign(userId:string,code:string){const {data,error}=await supabase.rpc('join_campaign',{code:code.trim()});if(error)throw error;await setActiveCampaign(userId,data as string);return data as string}
 export async function setActiveCampaign(userId:string,campaignId:string|null){const {error}=await supabase.from('player_states').update({active_campaign_id:campaignId}).eq('user_id',userId);if(error)throw error}
 
+export async function applyCampaignRecordConditional(campaignId:string,userId:string,next:CampaignRecord,expected?:CampaignRecord){
+  if(!expected){const {error}=await supabase.from('campaign_records').insert({id:next.id,campaign_id:campaignId,data:next,updated_by:userId});return{applied:!error,conflict:Boolean(error)}}
+  const {data,error}=await supabase.from('campaign_records').update({data:next,updated_by:userId}).eq('campaign_id',campaignId).eq('id',next.id).eq('data',expected).select('id');
+  if(error)throw error;
+  return{applied:Boolean(data?.length),conflict:!data?.length};
+}
+
 async function applyMutation(mutation:CloudMutation){
   if(mutation.kind==='upsert-record'){const {error}=await supabase.from('campaign_records').upsert({id:mutation.record.id,campaign_id:mutation.campaignId,data:mutation.record,updated_by:mutation.userId});if(error)throw error;return}
   if(mutation.kind==='delete-record'){const {error}=await supabase.from('campaign_records').delete().eq('campaign_id',mutation.campaignId).eq('id',mutation.recordId);if(error)throw error;return}
