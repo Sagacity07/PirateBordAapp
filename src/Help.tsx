@@ -1,5 +1,5 @@
 import {useMemo,useState} from 'react';
-import {BookOpen,Box,Download,Dices,HelpCircle,NotebookPen,Search,Shield,Swords,X} from 'lucide-react';
+import {BookOpen,Box,Download,Dices,HelpCircle,NotebookPen,Search,Shield,Swords,Users,X} from 'lucide-react';
 
 export type HelpDestination='character'|'combat'|'dice'|'inventory'|'campaign'|'journal'|'rules'|'transfer'|'settings';
 
@@ -34,6 +34,23 @@ const walkthroughSteps=[
   {title:'Play your way',body:'Use Combat and the built-in Dice roller, or enter results from physical dice. Equipment tracks weapons, ammunition, supplies, and uses.'},
   {title:'Cloud plus backup',body:'Your data synchronizes through Supabase and is cached for temporary offline play. Download a JSON backup occasionally as an independent safety copy.'},
 ];
+
+export const quickSetupSteps=[
+  {title:'Your campaign is ready',body:'Campaign facts such as sessions, NPCs, locations, quests, ships, treasure, and rumors are shared with everyone who joins your campaign. Give your invite code only to your gaming group.',icon:Users},
+  {title:'Add your pirate',body:'Open Character to create a pirate, type in a paper character sheet, add a portrait, or edit HP, abilities, class features, and advancement. If you already have a character JSON file, use Import / Export.',icon:Shield},
+  {title:'Check your equipment',body:'Equipment is where you add and edit weapons, armor, ammunition, relics, pets, supplies, quantities, uses, range, and equipped status. Equipped weapons feed into Combat.',icon:Box},
+  {title:'Use it during play',body:'The Deck is your five-second overview. Combat handles attacks, damage, HP, armor, conditions, ammunition, and Devil’s Luck. Dice supports built-in rolls and lets you record a result from physical dice.',icon:Dices},
+  {title:'Record the adventure',body:'Use Campaign for structured facts the whole crew should know. Use Journal for free-form notes; entries stay private unless you choose Share with crew. Open Help anytime for searchable explanations or to restart this guide.',icon:NotebookPen},
+];
+
+const quickSetupKey=(userId:string)=>`pirate-borg-quick-setup-v1:${userId}`;
+export const hasSeenQuickSetup=(userId:string)=>localStorage.getItem(quickSetupKey(userId))==='seen';
+export const markQuickSetupSeen=(userId:string)=>localStorage.setItem(quickSetupKey(userId),'seen');
+
+export function QuickSetupGuide({campaignName,inviteCode,onClose,onCharacter,onHelp}:{campaignName:string;inviteCode:string;onClose:()=>void;onCharacter:()=>void;onHelp:()=>void}){
+  const [step,setStep]=useState(0);const item=quickSetupSteps[step];const last=step===quickSetupSteps.length-1;const StepIcon=item.icon;
+  return <div className="modal-back"><div className="modal walkthrough quick-setup" role="dialog" aria-modal="true" aria-labelledby="quick-setup-title"><div className="modal-head"><div><span className="eyebrow">QUICK SETUP · STEP {step+1} OF {quickSetupSteps.length}</span><h2 id="quick-setup-title">{item.title}</h2></div><button className="icon-btn" aria-label="Close quick setup" onClick={onClose}><X/></button></div><div className="quick-setup-body"><StepIcon/><p>{item.body}</p></div>{step===0&&<section className="setup-campaign"><span>{campaignName}</span><p>Invite code: <b>{inviteCode}</b></p></section>}<div className="progress" aria-hidden="true">{quickSetupSteps.map((_,index)=><i className={index<=step?'active':''} key={index}/>)}</div><div className="modal-actions walkthrough-actions">{step>0&&<button onClick={()=>setStep(step-1)}>Back</button>}{last?<><button onClick={onHelp}><HelpCircle/>Open Help</button><button className="primary" onClick={onCharacter}><Shield/>Set up my pirate</button></>:<button className="primary" onClick={()=>setStep(step+1)}>Next</button>}</div></div></div>;
+}
 
 export function OnboardingWalkthrough({onClose,onDownload,onOpenHelp}:{onClose:()=>void;onDownload:()=>void;onOpenHelp:()=>void}){
   const [step,setStep]=useState(0);const item=walkthroughSteps[step];const last=step===walkthroughSteps.length-1;

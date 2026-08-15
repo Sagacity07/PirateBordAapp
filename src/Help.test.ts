@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {helpTopics} from './Help';
+import {helpTopics,quickSetupSteps} from './Help';
 
 describe('help topics',()=>{
   it('covers the essential first-time user tasks',()=>{
@@ -17,5 +17,10 @@ describe('help topics',()=>{
     const notes=helpTopics.find(topic=>topic.title.includes('Campaign'));
     expect(notes?.body).toContain('structured facts');
     expect(notes?.body).toContain('free-form');
+  });
+
+  it('walks a new campaign owner from setup through play and additional help',()=>{
+    const guide=quickSetupSteps.map(step=>`${step.title} ${step.body}`).join(' ').toLowerCase();
+    for(const subject of ['invite code','character','portrait','equipment','combat','physical dice','campaign','journal','share with crew','help'])expect(guide).toContain(subject);
   });
 });
