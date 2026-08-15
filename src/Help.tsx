@@ -37,7 +37,7 @@ const walkthroughSteps=[
 
 export const quickSetupSteps=[
   {title:'Your campaign is ready',body:'Campaign facts such as sessions, NPCs, locations, quests, ships, treasure, and rumors are shared with everyone who joins your campaign. Give your invite code only to your gaming group.',icon:Users},
-  {title:'Add your pirate',body:'Open Character to create a pirate, type in a paper character sheet, add a portrait, or edit HP, abilities, class features, and advancement. If you already have a character JSON file, use Import / Export.',icon:Shield},
+  {title:'Add your pirate',body:'Open Character to build a new pirate with the guided creator or enter the details manually. You can add a portrait and update HP, abilities, class features, and advancement at any time. If you already have a character JSON file, use Import / Export.',icon:Shield},
   {title:'Check your equipment',body:'Equipment is where you add and edit weapons, armor, ammunition, relics, pets, supplies, quantities, uses, range, and equipped status. Equipped weapons feed into Combat.',icon:Box},
   {title:'Use it during play',body:'The Deck is your five-second overview. Combat handles attacks, damage, HP, armor, conditions, ammunition, and Devil’s Luck. Dice supports built-in rolls and lets you record a result from physical dice.',icon:Dices},
   {title:'Record the adventure',body:'Use Campaign for structured facts the whole crew should know. Use Journal for free-form notes; entries stay private unless you choose Share with crew. Open Help anytime for searchable explanations or to restart this guide.',icon:NotebookPen},
