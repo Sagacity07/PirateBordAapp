@@ -60,11 +60,9 @@ export async function savePlayerState(userId:string,campaignId:string|null,data:
   const {error}=await supabase.from('player_states').upsert({user_id:userId,active_campaign_id:campaignId,character:data.character,rules:data.rules,rolls:data.rolls,settings:data.settings},{onConflict:'user_id'});if(error)throw error;
 }
 
-export async function createCampaign(userId:string,name:string,data:AppData):Promise<CloudCampaign>{
+export async function createCampaign(userId:string,name:string):Promise<CloudCampaign>{
   const {data:created,error}=await supabase.from('campaigns').insert({name:name.trim(),owner_id:userId}).select('id,name,invite_code,owner_id').single();if(error)throw error;
   await setActiveCampaign(userId,created.id);
-  if(data.campaign.length){const {error:recordsError}=await supabase.from('campaign_records').upsert(data.campaign.map(record=>({id:record.id,campaign_id:created.id,data:record,updated_by:userId})));if(recordsError)throw recordsError}
-  if(data.journal.length){const {error:journalError}=await supabase.from('journal_entries').upsert(data.journal.filter(entry=>!entry.ownerId||entry.ownerId===userId).map(entry=>({id:entry.id,campaign_id:created.id,owner_id:userId,visibility:entry.visibility??'private',data:{...entry,ownerId:userId}})));if(journalError)throw journalError}
   return{id:created.id,name:created.name,inviteCode:created.invite_code,ownerId:created.owner_id,role:'owner'};
 }
 
