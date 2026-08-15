@@ -7,10 +7,10 @@ describe('help topics',()=>{
     for(const subject of ['character','backup','equipment','physical dice','combat','conditions','campaign','journal','rules'])expect(help).toContain(subject);
   });
 
-  it('clearly explains that saved data is device-local',()=>{
+  it('clearly explains cloud sync and local caching',()=>{
     const saving=helpTopics.find(topic=>topic.title.includes('save'));
-    expect(saving?.body).toContain('this browser');
-    expect(saving?.body).toContain('no account or cloud sync');
+    expect(saving?.body).toContain('cached on this device');
+    expect(saving?.body).toContain('synchronized');
   });
 
   it('distinguishes structured campaign records from free-form journal notes',()=>{
